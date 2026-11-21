@@ -1,25 +1,28 @@
 
-name: GitHub PR Test
+name: Node.js CI
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
 
   pull_request:
-    branches:
-      - main
+    branches: [main]
 
 jobs:
   test:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Test Start
-        run: echo "Starting GitHub CI!"
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - name: Check Repository
-        run: echo "Repository test running..."
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
 
-      - name: Test Complete
-        run: echo "CI Success!"
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run tests
+        run: npm test
