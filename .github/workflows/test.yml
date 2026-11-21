@@ -1,21 +1,25 @@
 
-name: My First GitHub Actions
+name: GitHub PR Test
 
 on:
   push:
     branches:
       - main
 
+  pull_request:
+    branches:
+      - main
+
 jobs:
-  hello:
+  test:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Print Hello
-        run: echo "Hello GitHub Actions!"
+      - name: Test Start
+        run: echo "Starting GitHub CI!"
 
-      - name: Print Date
-        run: date
+      - name: Check Repository
+        run: echo "Repository test running..."
 
-      - name: Show Directory
-        run: pwd
+      - name: Test Complete
+        run: echo "CI Success!"
