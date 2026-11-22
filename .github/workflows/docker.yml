@@ -35,4 +35,6 @@ jobs:
         with:
           context: .
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/my-node-app:latest
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/my-node-app:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/my-node-app:${{ github.sha }}
