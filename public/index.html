@@ -1,0 +1,344 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TaskFlow</title>
+
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      padding: 40px 20px;
+      background: #f1f5f9;
+      font-family: Arial, sans-serif;
+      color: #1e293b;
+    }
+
+    .container {
+      max-width: 750px;
+      margin: auto;
+      padding: 30px;
+      background: white;
+      border-radius: 18px;
+      box-shadow: 0 8px 30px #0000000d;
+    }
+
+    h1 { margin-top: 0; }
+    .subtitle { color: #64748b; }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin: 25px 0;
+    }
+
+    .stat {
+      padding: 18px;
+      border-radius: 12px;
+      background: #eff6ff;
+    }
+
+    .stat:nth-child(2) { background: #ecfdf5; }
+    .stat:nth-child(3) { background: #fff7ed; }
+
+    .stat p {
+      margin: 0 0 10px;
+      color: #64748b;
+      font-size: 13px;
+    }
+
+    .stat strong { font-size: 27px; }
+
+    .progress-section { margin: 25px 0; }
+
+    .progress-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 9px;
+    }
+
+    .progress-track {
+      height: 12px;
+      background: #e2e8f0;
+      border-radius: 20px;
+      overflow: hidden;
+    }
+
+    #progress-bar {
+      height: 100%;
+      width: 0%;
+      background: #2563eb;
+      transition: width 0.3s;
+    }
+
+    .priority-stats {
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+      margin: 18px 0;
+      color: #64748b;
+      font-size: 13px;
+    }
+
+    form {
+      display: grid;
+      grid-template-columns: 1fr 140px 110px auto;
+      gap: 8px;
+      margin: 25px 0;
+    }
+
+    input, select {
+      min-width: 0;
+      padding: 12px;
+      border: 1px solid #cbd5e1;
+      border-radius: 9px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 9px;
+      padding: 11px 14px;
+      cursor: pointer;
+      background: #2563eb;
+      color: white;
+    }
+
+    .task {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 15px 0;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    .task-info { flex: 1; min-width: 0; }
+    .task-title { overflow-wrap: anywhere; }
+
+    .meta {
+      margin-top: 6px;
+      font-size: 12px;
+      color: #64748b;
+    }
+
+    .done {
+      color: #94a3b8;
+      text-decoration: line-through;
+    }
+
+    .priority {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 6px;
+      margin-right: 5px;
+      background: #e2e8f0;
+    }
+
+    .high { background: #fee2e2; color: #b91c1c; }
+    .medium { background: #fef3c7; color: #92400e; }
+    .low { background: #dcfce7; color: #166534; }
+
+    .delete { background: #ef4444; }
+    .complete { background: #16a34a; }
+
+    @media (max-width: 650px) {
+      form { grid-template-columns: 1fr 1fr; }
+      .stats { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="container">
+    <h1>TaskFlow ✨</h1>
+    <p class="subtitle">나의 할 일 관리 대시보드</p>
+
+    <section class="stats">
+      <div class="stat">
+        <p>전체 할 일</p>
+        <strong id="total">0</strong>
+      </div>
+
+      <div class="stat">
+        <p>완료한 일</p>
+        <strong id="completed">0</strong>
+      </div>
+
+      <div class="stat">
+        <p>남은 일</p>
+        <strong id="remaining">0</strong>
+      </div>
+    </section>
+
+    <section class="progress-section">
+      <div class="progress-header">
+        <strong>전체 진행률</strong>
+        <strong id="percentage">0%</strong>
+      </div>
+
+      <div class="progress-track">
+        <div id="progress-bar"></div>
+      </div>
+    </section>
+
+    <div class="priority-stats">
+      <span id="high-count">높음 0개</span>
+      <span id="medium-count">보통 0개</span>
+      <span id="low-count">낮음 0개</span>
+    </div>
+
+    <hr>
+
+    <h3>새로운 할 일</h3>
+
+    <form id="task-form">
+      <input id="task-input" placeholder="할 일 입력..." required maxlength="100">
+
+      <input id="task-date" type="date">
+
+      <select id="task-priority">
+        <option value="low">낮음</option>
+        <option value="medium" selected>보통</option>
+        <option value="high">높음</option>
+      </select>
+
+      <button type="submit">추가</button>
+    </form>
+
+    <h3>내 할 일 목록</h3>
+    <section id="task-list"></section>
+  </main>
+
+  <script>
+    const form = document.getElementById("task-form");
+    const input = document.getElementById("task-input");
+    const dateInput = document.getElementById("task-date");
+    const priorityInput = document.getElementById("task-priority");
+    const list = document.getElementById("task-list");
+
+    const priorityNames = {
+      high: "높음",
+      medium: "보통",
+      low: "낮음"
+    };
+
+    async function loadTasks() {
+      const response = await fetch("/api/tasks");
+
+      if (!response.ok) {
+        alert("할 일 목록을 불러오지 못했어!");
+        return;
+      }
+
+      const tasks = await response.json();
+
+      const total = tasks.length;
+      const completed = tasks.filter(task => task.completed).length;
+      const remaining = total - completed;
+      const percentage = total === 0
+        ? 0
+        : Math.round(completed / total * 100);
+
+      document.getElementById("total").textContent = total;
+      document.getElementById("completed").textContent = completed;
+      document.getElementById("remaining").textContent = remaining;
+      document.getElementById("percentage").textContent = percentage + "%";
+      document.getElementById("progress-bar").style.width = percentage + "%";
+
+      document.getElementById("high-count").textContent =
+        "높음 " + tasks.filter(t => t.priority === "high").length + "개";
+
+      document.getElementById("medium-count").textContent =
+        "보통 " + tasks.filter(t => t.priority === "medium").length + "개";
+
+      document.getElementById("low-count").textContent =
+        "낮음 " + tasks.filter(t => t.priority === "low").length + "개";
+
+      list.replaceChildren();
+
+      tasks.forEach(task => {
+        const row = document.createElement("div");
+        row.className = "task";
+
+        const info = document.createElement("div");
+        info.className = "task-info";
+
+        const title = document.createElement("div");
+        title.className = "task-title";
+        title.textContent = task.title;
+
+        if (task.completed) title.classList.add("done");
+
+        const meta = document.createElement("div");
+        meta.className = "meta";
+
+        const priority = document.createElement("span");
+        priority.className = "priority " + (task.priority || "medium");
+        priority.textContent = priorityNames[task.priority] || "보통";
+
+        const date = document.createElement("span");
+        date.textContent = task.dueDate
+          ? "마감일: " + task.dueDate
+          : "마감일 없음";
+
+        meta.append(priority, date);
+        info.append(title, meta);
+
+        const completeButton = document.createElement("button");
+        completeButton.className = "complete";
+        completeButton.textContent = task.completed ? "취소" : "완료";
+
+        completeButton.onclick = async () => {
+          await fetch("/api/tasks/" + task.id, { method: "PATCH" });
+          loadTasks();
+        };
+
+        const deleteButton = document.createElement("button");
+        deleteButton.className = "delete";
+        deleteButton.textContent = "삭제";
+
+        deleteButton.onclick = async () => {
+          await fetch("/api/tasks/" + task.id, { method: "DELETE" });
+          loadTasks();
+        };
+
+        row.append(info, completeButton, deleteButton);
+        list.append(row);
+      });
+    }
+
+    form.addEventListener("submit", async event => {
+      event.preventDefault();
+
+      const title = input.value.trim();
+      if (!title) return;
+
+      const response = await fetch("/api/tasks", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title,
+          dueDate: dateInput.value,
+          priority: priorityInput.value
+        })
+      });
+
+      if (!response.ok) {
+        alert("할 일을 추가하지 못했어!");
+        return;
+      }
+
+      input.value = "";
+      dateInput.value = "";
+      priorityInput.value = "medium";
+
+      loadTasks();
+    });
+
+    loadTasks();
+  </script>
+</body>
+</html>
